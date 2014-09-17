@@ -214,6 +214,7 @@ OF THE POSSIBILITY OF SUCH DAMAGES.
               0 = NEGATIVE
 
 
+              MCC = (A*D - B*C) / sqrt((A+B)(A+C)(D*B)(D+C))
               ACC = (A+D) /(A+B+C+D)
               PPV = A / (A+C)
               NPV = D / (B+D)
@@ -334,7 +335,7 @@ double factCache[MAX_TIES];
  
 int arg, taken, no_area, thresh, confusion, prcdata, plot;
 
-int ACC_flag, APR_flag, CAL_flag, CST_flag, CXE_flag, TOP_flag, RKL_flag;
+int MCC_flag, ACC_flag, APR_flag, CAL_flag, CST_flag, CXE_flag, TOP_flag, RKL_flag;
 int LFT_flag, NPV_flag, NRM_flag, PPV_flag, PRB_flag, PRF_flag, PRE_flag;
 int REC_flag, RMS_flag, ROC_flag, R50_flag, SEN_flag, SLQ_flag, SPC_flag;
 int SAR_flag, T01_flag, T10_flag;
@@ -378,6 +379,7 @@ void print_usage(char *s) {
   printf("Allowed options:\n");
   
   printf("\n  PERFORMANCE MEASURES\n");
+  printf("   -MCC             Matthews Correlation Coefficient\n");
   printf("   -ACC             Accuracy\n");
   printf("   -RMS             Root Mean Squared Error\n");
   printf("   -CXE             Mean Cross-Entropy\n");
@@ -555,6 +557,7 @@ void print_stats(double stat_a, double stat_b, double stat_c, double stat_d, cha
   recall    = stat_a / (stat_a + stat_b + eps);
 
   if (loss == 0) {
+    print_thresh_output (MCC_flag, "MCC", (stat_a*stat_d - stat_b*stat_c) / pow(1.0 * (stat_a+stat_b) * (stat_a+stat_c) * (stat_d+stat_b) * (stat_d+stat_c), 0.5), t_name, t_val);
     print_thresh_output (ACC_flag, "ACC", (stat_a+stat_d) / ((stat_a+stat_b+stat_c+stat_d)+eps), t_name, t_val);
     print_thresh_output (PPV_flag, "PPV", stat_a / ((stat_a+stat_c)+eps), t_name, t_val);
     print_thresh_output (NPV_flag, "NPV", stat_d / ((stat_b+stat_d)+eps), t_name, t_val);
@@ -1313,6 +1316,7 @@ int main (argc, argv)
   SET_stats = 0; 
   SET_easy = 0;
 
+  MCC_flag = 0;
   ACC_flag = 0;
   APR_flag = 0;
   CAL_flag = 0;
@@ -1358,6 +1362,7 @@ int main (argc, argv)
 
       /* Accept flag sets the last variable to 1 if the option is set */
 
+      taken += accept_flag(argv[arg], "-mcc", &MCC_flag);
       taken += accept_flag(argv[arg], "-acc", &ACC_flag);
       taken += accept_flag(argv[arg], "-rms", &RMS_flag);
 
@@ -1492,6 +1497,7 @@ int main (argc, argv)
 	SET_stats = 1;
 	SET_easy = 0;
 
+	MCC_flag = 1;
 	ACC_flag = 1;
 	APR_flag = 1;
 	CAL_flag = 1;
@@ -1603,7 +1609,7 @@ int main (argc, argv)
     } /* End of loop over arguments */
 
   /* If all flags are 0, do most of the basic stats */
-  if ( ACC_flag + APR_flag + CAL_flag + CST_flag + CXE_flag + T01_flag + T10_flag + SAR_flag +
+  if ( MCC_flag + ACC_flag + APR_flag + CAL_flag + CST_flag + CXE_flag + T01_flag + T10_flag + SAR_flag +
        LFT_flag + NPV_flag + NRM_flag + PPV_flag + PRB_flag + PRF_flag + PRE_flag + TOP_flag +
        RKL_flag + REC_flag + RMS_flag + ROC_flag + R50_flag + SEN_flag + SLQ_flag + SPC_flag == 0) {
 
@@ -1611,6 +1617,7 @@ int main (argc, argv)
     SET_stats = 1;
     SET_easy = 0;
 
+    MCC_flag = 1;
     ACC_flag = 1;
     APR_flag = 1;
     CAL_flag = 1;
@@ -1641,7 +1648,7 @@ int main (argc, argv)
 
   if (BLOCKS_flag &&
       (!(APR_flag || RMS_flag || T01_flag || RKL_flag)
-      || ACC_flag || CAL_flag || CST_flag || CXE_flag || LFT_flag || NPV_flag
+      || MCC_flag || ACC_flag || CAL_flag || CST_flag || CXE_flag || LFT_flag || NPV_flag
       || NRM_flag || PPV_flag || PRB_flag || PRF_flag || PRE_flag || REC_flag
       || ROC_flag || R50_flag || SAR_flag || SEN_flag || SLQ_flag || SPC_flag
       || T10_flag || TOP_flag)) {
